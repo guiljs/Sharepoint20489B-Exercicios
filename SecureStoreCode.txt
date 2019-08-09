@@ -1,0 +1,78 @@
+public void GetCredentials(out string username, out string password)
+        {
+            username = "";
+            password = "";
+            string appId = "Northwind";
+
+            try
+            {
+                // get the LobSystemInstance properties via context from BDC
+                INamedPropertyDictionary properties = this.LobSystemInstance.GetProperties();
+
+                if (properties.ContainsKey("AppId"))
+                {
+                    appId = properties["AppId"] as string;
+                }
+            }
+            catch (Exception ex)
+            {
+            }            
+
+            // Get the default Secure Store Service provider.
+            ISecureStoreProvider provider = SecureStoreProviderFactory.Create();
+            if (provider == null)
+            {
+                throw new InvalidOperationException("Unable to get an ISecureStoreProvider");
+            }
+
+            ISecureStoreServiceContext providerContext = provider as ISecureStoreServiceContext;
+            providerContext.Context = SPServiceContext.GetContext(new SPSite("http://london:50000"));
+
+            using (SecureStoreCredentialCollection creds = provider.GetCredentials(appId))
+            {
+                if (creds != null)
+                {
+                    foreach (SecureStoreCredential cred in creds)
+                    {
+                        switch (cred.CredentialType)
+                        {
+                            case SecureStoreCredentialType.UserName:
+                                if (string.IsNullOrEmpty(username))
+                                {
+                                    username = GetStringFromSecureString(cred.Credential);
+                                }
+                                break;
+
+                            case SecureStoreCredentialType.Password:
+                                if (string.IsNullOrEmpty(password))
+                                {
+                                    password = GetStringFromSecureString(cred.Credential);
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static string GetStringFromSecureString(SecureString secStr)
+        {
+            if (secStr == null)
+            {
+                return null;
+            }
+
+            IntPtr pPlainText = IntPtr.Zero;
+            try
+            {
+                pPlainText = Marshal.SecureStringToBSTR(secStr);
+                return Marshal.PtrToStringBSTR(pPlainText);
+            }
+            finally
+            {
+                if (pPlainText != IntPtr.Zero)
+                {
+                    Marshal.FreeBSTR(pPlainText);
+                }
+            }
+        }

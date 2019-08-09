@@ -1,0 +1,16 @@
+using System.Data;
+using System.Data.SqlClient;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Security;
+using System.Security.AccessControl;
+using System.Security.Principal;
+
+using Microsoft.Office.SecureStoreService.Server;
+using Microsoft.BusinessData.Infrastructure.SecureStore;
+using Microsoft.BusinessData.SystemSpecific;
+using Microsoft.BusinessData.Runtime;
+using Microsoft.BusinessData.MetadataModel;
+
+using Microsoft.SharePoint;
+using Microsoft.BusinessData.MetadataModel.Collections;

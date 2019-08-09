@@ -1,0 +1,392 @@
+public static Product ReadItem(int ProductId)
+        {
+            Product p = null;
+
+            ProductService ps = new ProductService();
+            ps.GetCredentials(out username, out password);
+
+            SqlConnection conn = new SqlConnection(string.Format("server=localhost;database=Northwind;uid={0};pwd={1}", username, password));
+
+            try
+            {
+                conn.Open();
+
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("select * from products where productid = {0}", ProductId);
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    p = new Product();
+                    p.ProductId = int.Parse(reader["ProductId"].ToString());
+                    p.Name = reader["ProductName"].ToString();
+                    p.QuantityPerUnit = reader["QuantityPerUnit"].ToString();
+                    p.RetailPrice = reader["UnitPrice"].ToString();
+
+                    SqlConnection conn2 = new SqlConnection(string.Format("server=localhost;database=ProductData;uid={0};pwd={1}", username, password));
+                    conn2.Open();
+
+                    SqlCommand cmd2 = conn2.CreateCommand();
+                    cmd2.CommandText = "select * from product where productid = " + p.ProductId;
+
+                    SqlDataReader reader2 = cmd2.ExecuteReader();
+
+                    while (reader2.Read())
+                    {
+                        p.CostBasis = reader2["CostBasis"].ToString();
+                        p.Description = reader2["Description"].ToString();
+                        p.Manufacturer = reader2["Manufacturer"].ToString();
+                        p.ProductManager = reader2["ProductManager"].ToString();
+                    }
+
+                    reader2.Close();
+                    conn2.Close();
+                }
+
+                reader.Close();
+            }
+            catch (Exception ex)
+            {
+            }
+
+            conn.Close();
+
+            return p;
+        }
+
+public static IEnumerable<Product> ReadList()
+        {            
+            List<Product> products = new List<Product>();
+
+            ProductService ps = new ProductService();
+            ps.GetCredentials(out username, out password);
+
+            SqlConnection conn = new SqlConnection(string.Format("server=localhost;database=Northwind;uid={0};pwd={1}", username, password));
+
+            try
+            {
+                conn.Open();
+
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = "select * from products";
+
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    Product p = new Product();
+                    p.ProductId = int.Parse(reader["ProductId"].ToString());
+                    p.Name = reader["ProductName"].ToString();
+                    p.QuantityPerUnit = reader["QuantityPerUnit"].ToString();
+                    p.RetailPrice = reader["UnitPrice"].ToString();
+
+                    SqlConnection conn2 = new SqlConnection(string.Format("server=localhost;database=ProductData;uid={0};pwd={1}", username, password));
+                    conn2.Open();
+
+                    SqlCommand cmd2 = conn2.CreateCommand();
+                    cmd2.CommandText = "select * from product where productid = " + p.ProductId;
+
+                    SqlDataReader reader2 = cmd2.ExecuteReader();
+
+                    while (reader2.Read())
+                    {
+                        p.CostBasis = reader2["CostBasis"].ToString();
+                        p.Description = reader2["Description"].ToString();
+                        p.Manufacturer = reader2["Manufacturer"].ToString();
+                        p.ProductManager = reader2["ProductManager"].ToString();
+                    }
+
+                    reader2.Close();
+                    conn2.Close();
+
+                    products.Add(p);
+                }
+
+                reader.Close();
+            }
+            catch (Exception ex)
+            {
+            }
+
+            conn.Close();
+
+            return products;
+        }
+
+public static byte[] GetProductFile(int ProductId)
+        {
+            ProductService ps = new ProductService();
+            ps.GetCredentials(out username, out password);
+
+            SqlConnection conn = new SqlConnection(string.Format("server=localhost;database=ProductData;uid={0};pwd={1}", username, password));
+            byte[] file = null;
+
+            try
+            {
+                conn.Open();
+
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("select ProductSpecFile from Product where productid = {0}", ProductId);
+                SqlDataReader reader = cmd.ExecuteReader(CommandBehavior.SequentialAccess);
+
+                MemoryStream s = null;
+                BinaryWriter bw = null;
+
+                while (reader.Read())
+                {
+                    s = new MemoryStream();
+                    bw = new BinaryWriter(s);
+
+                    long startIndex = 0;
+                    int bufferSize = 100;
+                    byte[] outbyte = new byte[bufferSize];
+
+                    // Read the bytes into outbyte[] and retain the number of bytes returned.
+                    long retval = reader.GetBytes(0, startIndex, outbyte, 0, bufferSize);
+
+                    // Continue reading and writing while there are bytes beyond the size of the buffer.
+                    while (retval == bufferSize)
+                    {
+                        bw.Write(outbyte);
+                        bw.Flush();
+
+                        // Reposition the start index to the end of the last buffer and fill the buffer.
+                        startIndex += bufferSize;
+                        retval = reader.GetBytes(0, startIndex, outbyte, 0, bufferSize);
+                    }
+
+                    // Write the remaining buffer.
+                    bw.Write(outbyte, 0, (int)retval);
+                    bw.Flush();
+                }
+
+                // Close the reader and the connection.
+                reader.Close();
+                conn.Close();
+
+                file = s.ToArray();
+
+                bw.Close();
+                s.Close();
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            return file;
+        }
+
+public static byte[] GetProductSecurity(int ProductId)
+        {
+            ProductService ps = new ProductService();
+            //ps.GetCredentials(out username, out password);
+
+            SqlConnection conn = new SqlConnection(string.Format("server=localhost;database=ProductData;uid={0};pwd={1}", username, password));
+
+            NTAccount owner = new NTAccount("contoso", "administrator");
+            SecurityIdentifier ownerSid = (SecurityIdentifier)owner.Translate(typeof(SecurityIdentifier));
+
+            CommonSecurityDescriptor sd = new CommonSecurityDescriptor(false, false, ControlFlags.None, ownerSid, null, null, null);
+            sd.SetDiscretionaryAclProtection(true, false);            
+
+            bool wasRead = false;
+
+            try
+            {
+                conn.Open();
+
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("select * from product where productid = {0}", ProductId);
+
+                SqlDataReader reader = cmd.ExecuteReader();                
+
+                while (reader.Read())
+                {
+                    wasRead = true;
+
+                    string[] users = reader["Users"].ToString().Split('|');
+
+                    foreach (string user in users)
+                    {
+                        try
+                        {
+                            string[] vals = user.Split('\\');
+                            NTAccount acc = new NTAccount(vals[0], vals[1]);
+                            SecurityIdentifier sid = (SecurityIdentifier)acc.Translate(typeof(SecurityIdentifier));
+
+                            //Grant full access to specified user
+                            sd.DiscretionaryAcl.AddAccess(AccessControlType.Allow, sid, unchecked((int)0xffffffffL), InheritanceFlags.None, PropagationFlags.None);
+                        }
+                        catch (Exception ex2)
+                        {
+                        }
+                    }
+                }
+
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+            }
+
+            if (!wasRead)
+            {                                
+                SecurityIdentifier sid = (SecurityIdentifier)owner.Translate(typeof(SecurityIdentifier));
+
+                //Grant full access to specified user
+                sd.DiscretionaryAcl.AddAccess(AccessControlType.Allow, sid, unchecked((int)0xffffffffL), InheritanceFlags.None, PropagationFlags.None);
+
+            }
+
+            byte[] secDes = new Byte[sd.BinaryLength];
+            sd.GetBinaryForm(secDes, 0);
+
+            return secDes;
+        }
+
+public static IEnumerable<Int32> ProductIDEnumerator()
+        {
+            ProductService ps = new ProductService();
+            ps.GetCredentials(out username, out password);
+
+            SqlConnection conn = new SqlConnection(string.Format("server=localhost;database=Northwind;uid={0};pwd={1}", username, password));
+
+            try
+            {
+                conn.Open();
+
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("select ProductID from products");
+                
+                SqlDataReader rdr = cmd.ExecuteReader();
+
+                List<Int32> productIds = new List<Int32>();
+
+                while (rdr.Read())
+                {
+                    productIds.Add((Int32)rdr[0]);
+                }
+
+                conn.Close();
+
+                return productIds;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+
+public static Product CreateItem(string Name, string Description, string RetailPrice, string QuantityPerUnit, string Manufacturer, string ProductManager, string CostBasis)
+        {
+            Product p = null;
+            ProductService ps = new ProductService();
+            ps.GetCredentials(out username, out password);
+
+            SqlConnection conn = new SqlConnection(string.Format("server=localhost;database=Northwind;uid={0};pwd={1}", username, password));
+
+            try
+            {
+                conn.Open();
+
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("insert into products (ProductName, UnitPrice, QuantityPerUnit) values ('{0}','{1}','{2}')", Name, RetailPrice, QuantityPerUnit);
+
+                cmd.ExecuteNonQuery();
+
+                cmd.CommandText = "select @@identity";
+                string productId = cmd.ExecuteScalar().ToString();
+
+                SqlConnection conn2 = new SqlConnection(string.Format("server=localhost;database=ProductData;uid={0};pwd={1}", username, password));
+                conn2.Open();
+
+                SqlCommand cmd2 = conn2.CreateCommand();
+                cmd2.CommandText = string.Format("insert into product (ProductId, CostBasis, Description, Manufacturer, ProductManager) values ('{0}', '{1}', '{2}', '{3}','{4}')", productId, CostBasis, Description, Manufacturer, ProductManager);
+                cmd2.ExecuteNonQuery();
+
+                conn2.Close();
+                conn.Close();
+
+                p = new Product();
+                p.ProductId = int.Parse(productId);
+                p.Name = Name;
+                p.Description = Description;
+                p.RetailPrice = RetailPrice;
+                p.QuantityPerUnit = QuantityPerUnit;
+                p.ProductManager = ProductManager;
+                p.CostBasis = CostBasis;
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return p;
+        }
+
+public static Product UpdateItem(Product product)
+        {
+            Product p = null;
+            ProductService ps = new ProductService();
+            ps.GetCredentials(out username, out password);
+
+            SqlConnection conn = new SqlConnection(string.Format("server=localhost;database=Northwind;uid={0};pwd={1}", username, password));
+
+            try
+            {
+                conn.Open();
+
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("update products set ProductName='{0}', UnitPrice='{1}', QuantityPerUnit = '{2}' where productid = {3}", product.Name, product.RetailPrice, product.QuantityPerUnit, product.ProductId);
+
+
+                cmd.ExecuteNonQuery();
+
+                SqlConnection conn2 = new SqlConnection(string.Format("server=localhost;database=ProductData;uid={0};pwd={1}", username, password));
+                conn2.Open();
+
+                SqlCommand cmd2 = conn2.CreateCommand();
+                cmd2.CommandText = string.Format("update product set CostBasis='{0}', Description='{1}', Manufacturer = '{2}', ProductManager='{3}' where productid = {4}", product.CostBasis, product.Description, product.Manufacturer, product.ProductManager, product.ProductId);
+                cmd2.ExecuteNonQuery();
+
+                conn2.Close();
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+            }
+
+            return product;
+        }
+
+public static void DeleteItem(int ProductId)
+        {
+            ProductService ps = new ProductService();
+            ps.GetCredentials(out username, out password);
+
+            SqlConnection conn = new SqlConnection(string.Format("server=localhost;database=Northwind;uid={0};pwd={1}", username, password));
+
+            try
+            {
+                conn.Open();
+
+                SqlCommand cmd = conn.CreateCommand();
+                cmd.CommandText = string.Format("delete from products where productid = {0}", ProductId);
+
+                cmd.ExecuteNonQuery();
+
+                SqlConnection conn2 = new SqlConnection(string.Format("server=localhost;database=ProductData;uid={0};pwd={1}", username, password));
+                conn2.Open();
+
+                SqlCommand cmd2 = conn2.CreateCommand();
+                cmd2.CommandText = string.Format("delete from product where productid = {0}", ProductId);
+                cmd2.ExecuteNonQuery();
+
+                conn2.Close();
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+            }
+        }

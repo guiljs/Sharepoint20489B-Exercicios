@@ -1,0 +1,138 @@
+<Method Name="CreateItem">
+              <Parameters>
+                <Parameter Name="Name" Direction="In" DefaultDisplayName="Name">
+                  <TypeDescriptor CreatorField="true" Name="Name" TypeName="System.String" DefaultDisplayName="Name" />
+                </Parameter>
+                <Parameter Name="Description" Direction="In">
+                  <TypeDescriptor CreatorField="true" Name="Description" TypeName="System.String" />
+                </Parameter>
+                <Parameter Name="RetailPrice" Direction="In">
+                  <TypeDescriptor CreatorField="true" Name="RetailPrice" TypeName="System.String" />
+                </Parameter>
+                <Parameter Name="QuantityPerUnit" Direction="In">
+                  <TypeDescriptor CreatorField="true" Name="QuantityPerUnit" TypeName="System.String" />
+                </Parameter>
+                <Parameter Name="ProductManager" Direction="In">
+                  <TypeDescriptor CreatorField="true" Name="ProductManager" TypeName="System.String" />
+                </Parameter>
+                <Parameter Name="Manufacturer" Direction="In">
+                  <TypeDescriptor CreatorField="true" Name="Manufacturer" TypeName="System.String" />
+                </Parameter>
+                <Parameter Name="CostBasis" Direction="In">
+                  <TypeDescriptor CreatorField="true" Name="CostBasis" TypeName="System.String" />
+                </Parameter>
+                <Parameter Direction="Return" Name="Return">
+                  <TypeDescriptor TypeName="NorthwindModel.NorthwindModel.Product, NorthwindModel" Name="Product">
+                    <TypeDescriptors>
+                      <TypeDescriptor TypeName="System.Int32" IdentifierName="ProductId" Name="ProductId" ReadOnly="true" />
+                      <TypeDescriptor TypeName="System.String" Name="Name" />
+                      <TypeDescriptor Name="Description" TypeName="System.String" />
+                      <TypeDescriptor Name="RetailPrice" TypeName="System.String" />
+                      <TypeDescriptor Name="QuantityPerUnit" TypeName="System.String" />
+                      <TypeDescriptor Name="ProductManager" TypeName="System.String" />
+                      <TypeDescriptor Name="Manufacturer" TypeName="System.String" />
+                      <TypeDescriptor Name="CostBasis" TypeName="System.String" />
+                    </TypeDescriptors>
+                  </TypeDescriptor>
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Name="Create Product" Type="Creator" ReturnParameterName="Return" ReturnTypeDescriptorName="Product"></MethodInstance>
+              </MethodInstances>
+            </Method>
+<Method Name="GetProductFile">
+              <Parameters>
+                <Parameter Direction="In" Name="@ProductId">
+                  <TypeDescriptor TypeName="System.Int32" IdentifierName="ProductId" Name="ProductId" />
+                </Parameter>
+                <Parameter Name="StreamData" Direction="Return">
+                  <TypeDescriptor TypeName="System.Byte[]" Name="FileBytes" />
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Name="Get Product File" Type="StreamAccessor" ReturnParameterName="StreamData" ReturnTypeDescriptorName="FileBytes">                  
+                </MethodInstance>
+              </MethodInstances>
+            </Method>
+            <Method Name="GetProductSecurity">
+              <Parameters>
+                <Parameter Direction="In" Name="@ProductId">
+                  <TypeDescriptor TypeName="System.Int32" IdentifierName="ProductId" Name="ProductId" />
+                </Parameter>
+                <Parameter Name="Return" Direction="Return">
+                  <TypeDescriptor TypeName="System.Byte[]" Name="SecurityDescriptor" />
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Type="BinarySecurityDescriptorAccessor" 
+                                ReturnParameterName="Return" 
+                                ReturnTypeDescriptorName="SecurityDescriptor" 
+                                Name="BinarySecurityDescriptorAccessor"
+                                DefaultDisplayName="ReadSecurity">
+                  <Properties>
+                    <Property Name="WindowsSecurityDescriptorField" Type="System.String">SecurityDescriptor</Property>
+                  </Properties>
+                </MethodInstance>
+              </MethodInstances>
+            </Method>
+            <Method Name="ProductIDEnumerator">              
+              <Parameters>
+                <Parameter Name="Return" Direction="Return">
+                  <TypeDescriptor TypeName="System.Collections.Generic.IEnumerable`1[[System.Int32]]" IsCollection="true" Name="Ids">
+                    <TypeDescriptors>
+                      <TypeDescriptor TypeName="System.Int32" Name="Id" ReadOnly="true"
+                              IdentifierName="ProductId" />                        
+                    </TypeDescriptors>
+                  </TypeDescriptor>
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Name="ProductIDEnumeratorInstance"   Type="IdEnumerator" ReturnParameterName="Return" ReturnTypeDescriptorName="Ids" />
+              </MethodInstances>
+            </Method>
+<Method Name="DeleteItem">
+              <Parameters>
+                <Parameter Direction="In" Name="ProductId">
+                  <TypeDescriptor TypeName="System.Int32" IdentifierName="ProductId" Name="ProductId" />
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Name="Delete Product" Type="Deleter"></MethodInstance>
+              </MethodInstances>
+            </Method>
+<Method Name="UpdateItem">
+              <Parameters>
+                <Parameter Name="product" Direction="In">
+                  <TypeDescriptor Name="Product" TypeName="NorthwindModel.NorthwindModel.Product, NorthwindModel">
+                    <TypeDescriptors>
+                      <TypeDescriptor TypeName="System.Int32" IdentifierName="ProductId" Name="ProductId"  />
+                      <TypeDescriptor UpdaterField="true" Name="Name" TypeName="System.String" />
+                      <TypeDescriptor UpdaterField="true" Name="Description" TypeName="System.String" />
+                      <TypeDescriptor UpdaterField="true" Name="RetailPrice" TypeName="System.String" />
+                      <TypeDescriptor UpdaterField="true" Name="QuantityPerUnit" TypeName="System.String" />
+                      <TypeDescriptor UpdaterField="true" Name="ProductManager" TypeName="System.String" />
+                      <TypeDescriptor UpdaterField="true" Name="Manufacturer" TypeName="System.String" />
+                      <TypeDescriptor UpdaterField="true" Name="CostBasis" TypeName="System.String" />
+                    </TypeDescriptors>
+                  </TypeDescriptor>
+                </Parameter>
+                <Parameter Direction="Return" Name="Return">
+                  <TypeDescriptor TypeName="NorthwindModel.NorthwindModel.Product, NorthwindModel" Name="Product">
+                    <TypeDescriptors>
+                      <TypeDescriptor TypeName="System.Int32" IdentifierName="ProductId" Name="ProductId" ReadOnly="true" />
+                      <TypeDescriptor TypeName="System.String" Name="Name" />
+                      <TypeDescriptor Name="Description" TypeName="System.String" />
+                      <TypeDescriptor Name="RetailPrice" TypeName="System.String" />
+                      <TypeDescriptor Name="QuantityPerUnit" TypeName="System.String" />
+                      <TypeDescriptor Name="ProductManager" TypeName="System.String" />
+                      <TypeDescriptor Name="Manufacturer" TypeName="System.String" />
+                      <TypeDescriptor Name="CostBasis" TypeName="System.String" />
+                    </TypeDescriptors>
+                  </TypeDescriptor>
+                </Parameter>
+              </Parameters>
+              <MethodInstances>
+                <MethodInstance Name="Update Product" Type="Updater" ReturnParameterName="Return" ReturnTypeDescriptorName="Product"></MethodInstance>
+              </MethodInstances>
+            </Method>
+
